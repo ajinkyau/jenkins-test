@@ -1,0 +1,21 @@
+{
+  "name": "polymer-github-search",
+  "description": "Search for users and repositories from github",
+  "main": "polymer-github-search.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0",
+    "paper-input": "PolymerElements/paper-input#^2.0.2",
+    "paper-listbox": "PolymerElements/paper-listbox#^2.0.0",
+    "iron-ajax": "PolymerElements/iron-ajax#^2.0.5",
+    "paper-item": "PolymerElements/paper-item#^2.0.0",
+    "paper-progress": "PolymerElements/paper-progress#^2.0.1"
+  },
+  "devDependencies": {
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "Polymer/web-component-tester#^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "resolutions": {
+    "polymer": "^2.0.0"
+  }
+}

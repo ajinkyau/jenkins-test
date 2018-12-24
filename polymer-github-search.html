@@ -1,0 +1,177 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../iron-request/iron-request.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-progress/paper-progress.html">
+
+<dom-module id="polymer-github-search">
+	<template>
+		<style>
+			:host {
+				display: block;
+			}
+
+			paper-item img {
+				width: 70px;
+				float: left;
+				border-radius: 50%;
+				margin: 10px;
+			}
+
+			paper-item span {
+				position: relative;
+				top: 18px;
+				left: 10px;
+			}
+
+			paper-item a {
+				margin: 10px;
+			}
+
+			paper-progress {
+				display: none;
+				width: 100%;
+			}
+		</style>
+		<paper-input label="Search user" on-change="searchUser" value="{{name}}" autofocus></paper-input>
+		<paper-progress id="progressBar" indeterminate="true"></paper-progress>
+		<iron-ajax
+				id="getQuoteAjax"
+				url="https://api.github.com/search/users"
+				headers='{"Content-Type": "application/json"}'
+				method="get"
+				handle-as="json"
+				on-response="handleResponse"
+				on-error="handleError"
+				debounce-duration="300"></iron-ajax>
+		<paper-listbox>
+			<template is="dom-repeat" items="{{users}}" as="user">
+				<paper-item on-click="getRepos">
+					<div>
+						<p>
+							<img src="{{user.avatar_url}}">
+							<span style="line-height: 50px;">{{user.login}}</span>
+						</p>
+						<a href="{{user.html_url}}" target="_blank">
+							{{user.html_url}}
+						</a>
+					</div>
+				</paper-item>
+
+				<template is="dom-if" if="{{user.showRepos}}">
+					<table hidden$="{{!user.repos.length}}">
+						<thead>
+						<tr style="text-align: center;">
+							<th>Repo Name</th>
+							<th>Repo URL</th>
+						</tr>
+						</thead>
+						<tbody>
+						<template is="dom-repeat" items="{{user.repos}}" as="repo">
+							<tr style="text-align: center;">
+								<td>
+									{{repo.name}}
+								</td>
+								<td>
+									<a href="{{repo.html_url}}" target="_blank">
+										{{repo.html_url}}
+									</a>
+								</td>
+							</tr>
+						</template>
+						</tbody>
+					</table>
+				</template>
+			</template>
+		</paper-listbox>
+
+		<iron-ajax id="xhr" on-response="updateUserRepos"></iron-ajax>
+	</template>
+
+	<script>
+      /**
+       * `polymer-github-search`
+       * Search for users and repositories from github
+       *
+       * @customElement
+       * @polymer
+       * @demo demo/index.html
+       */
+      class PolymerGithubSearch extends Polymer.Element {
+          static get is() {
+              return 'polymer-github-search';
+          }
+
+          connectedCallback() {
+              super.connectedCallback();
+          }
+
+          static get properties() {
+              return {
+                  name: {
+                      type: String,
+                      value: ''
+                  },
+                  url_token: {
+                      type: String,
+                      value: '?client_id=fb6420582bd38efec385&client_secret=5e587e37d554eb20871946b55254e53f817bbf15'
+                  },
+                  users: {
+                      type: Array,
+                      value: []
+                  },
+                  model: Object,
+                  error: String
+              };
+          }
+
+          showProgressBar() {
+              this.$.progressBar.style.display = 'block';
+          }
+
+          hideProgressBar() {
+              this.$.progressBar.style.display = 'none';
+          }
+
+          searchUser() {
+              this.$.getQuoteAjax.params['q'] = this.name;
+              this.$.getQuoteAjax.url += this.url_token;
+              this.showProgressBar();
+              this.$.getQuoteAjax.generateRequest();
+          }
+
+          getRepos(event) {
+              this.model = event.model;
+              this.model.set('user.showRepos', !this.model.user.showRepos);
+              if (this.model.user.showRepos) {
+                  this.$.xhr.url = this.model.user.repos_url + this.url_token;
+                  this.showProgressBar();
+                  this.$.xhr.generateRequest();
+              }
+          }
+
+          updateUserRepos(event) {
+              this.model.set('user.repos', event.detail.response);
+              this.hideProgressBar();
+          }
+
+          handleResponse(event) {
+              this.users = [];
+              for (let user of event.detail.response.items) {
+                  user.repos = [];
+                  user.showRepos = false;
+                  this.push('users', user);
+              }
+              this.hideProgressBar();
+          }
+
+          handleError(event) {
+              this.error = event.detail.request.xhr.response;
+          }
+      }
+
+      window.customElements.define(PolymerGithubSearch.is, PolymerGithubSearch);
+	</script>
+</dom-module>
